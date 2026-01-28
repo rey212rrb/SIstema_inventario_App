@@ -1,6 +1,7 @@
 package implementacion.Inventario;
 
 import implementacion.Inventario.modelo.Producto;
+import implementacion.Inventario.servicio.InventarioService;
 import implementacion.Inventario.servicio.ProductoServicio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -24,6 +26,8 @@ public class InventarioApplication implements CommandLineRunner {
     private String salto = System.lineSeparator();
     private Scanner sc = new Scanner(System.in);
 
+    @Autowired
+    private InventarioService inventarioService;
 
 	public static void main(String[] args) {
 
@@ -63,6 +67,8 @@ public class InventarioApplication implements CommandLineRunner {
                 3.- Borrar Poducto
                 4.- Consultar Poducto
                 5.- Listar Poductos
+                6.- Ajuste Inventario
+                7.- Reporte Inventario
                 0.- Salir 
                 
                 Seleccionar una opcion: """);
@@ -80,6 +86,8 @@ public class InventarioApplication implements CommandLineRunner {
             case 3 -> borrar();
             case 4 -> consultar();
             case 5 -> listar();
+            case 6 -> ajusteInvetnario();
+            case 7 -> generarReporteStock();
             case 0 -> logger.info("Adios.");
 
             default -> throw new IllegalStateException("Valor inesperado: " + opcion);
@@ -179,10 +187,69 @@ public class InventarioApplication implements CommandLineRunner {
 
     }
 
+    public void ajusteInvetnario(){
+
+        logger.info("Ajuste Inventario" + salto);
+
+        var id = leerId("Ajuste Inventario");
+
+        logger.info("Cantidad a ajustar (Positivo = Entrada, Negativo = Salida): ");
+        int cantidad = Integer.parseInt(sc.nextLine());
+
+        logger.info("Motivo del ajuste: ");
+        String motivo = sc.nextLine();
+
+        try {
+
+            inventarioService.realizarAjuste(id, cantidad, motivo);
+
+            logger.info("Ajuste registrado correctamente para el producto ID: " + id + salto);
+
+        } catch (Exception e) {
+
+            logger.info("Error al realizar el ajuste: " + e.getMessage() + salto);
+
+        }
+
+    }
+
+    private void generarReporteStock() {
+
+        logger.info("Reporte Stock Bajo" + salto);
+
+        var lista = inventarioService.obtenerReporteBajoStock();
+
+        if(lista.isEmpty()){
+
+            logger.info("No hay productos con stock bajo." + salto);
+
+        } else {
+
+            logger.info("ATENCION: Los siguientes productos están por agotarse:" + salto);
+
+            // Formato tabla simple
+            System.out.printf("%-5s %-20s %-10s %-10s%n", "ID", "NOMBRE", "ACTUAL", "MINIMO");
+            System.out.println("-------------------------------------------------------");
+
+            for (Producto p : lista) {
+                System.out.printf("%-5d %-20s %-10d %-10d%n",
+                        p.getId(),
+                        p.getNombre(),
+                        p.getStockActual(),
+                        p.getStockMinimo()
+                );
+            }
+
+            logger.info(salto);
+
+        }
+    }
+
     public Integer leerId(String operacion){
 
         logger.info("Ingrese el ID del producto " + operacion + " : " + salto);
         return Integer.parseInt(sc.nextLine());
+
     }
 
 
