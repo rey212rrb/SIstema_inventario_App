@@ -102,7 +102,7 @@ public class InventarioService {
 
     private void enviarAlertaBajoStock(Producto producto) {
 
-        String destinatario = "rosales.basurto@outlook.com";
+        String destinatario = "ponce_isabel@hotmail.com ";
         String asunto = "Aviso de stock: " + producto.getNombre();
 
         String mensaje = String.format("""
